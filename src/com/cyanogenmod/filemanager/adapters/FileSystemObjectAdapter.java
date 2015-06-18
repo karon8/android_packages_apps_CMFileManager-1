@@ -210,6 +210,7 @@ public class FileSystemObjectAdapter
     private void processData() {
         Theme theme = ThemeManager.getCurrentTheme(getContext());
         Resources res = getContext().getResources();
+        AppDirNameHelper appDirNameHelper = new AppDirNameHelper(getContext());
         int cc = getCount();
 
         this.mData = new DataHolder[cc];
@@ -244,7 +245,8 @@ public class FileSystemObjectAdapter
             }
             this.mData[i].mDwIcon = this.mIconHolder.getDrawable(
                     MimeTypeHelper.getIcon(getContext(), fso));
-            this.mData[i].mName = fso.getName() + AppDirNameHelper.getAppName(fso.getName());
+            this.mData[i].mName = fso.getName() + AppDirNameHelper.getAppName(
+                               fso.getFullPath().replace("storage/emulated/0/",""));
             this.mData[i].mSummary = sbSummary.toString();
             this.mData[i].mSize = FileHelper.getHumanReadableSize(fso);
         }

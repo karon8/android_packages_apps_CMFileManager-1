@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The CyanogenMod Project
+ * Copyright (C) 2015 The SudaMod Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,24 +16,39 @@
 
 package com.cyanogenmod.filemanager.util;
 
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
+import java.io.IOException;
 
 import java.util.HashMap;
 
 public final class AppDirNameHelper {
+    private static Context ct;
+    private static DBHelper dbHelper;
+    private static SQLiteDatabase db;
+    private static String appName;
 
-    static HashMap<String, String> appMap = new HashMap<String, String>();
+    public AppDirNameHelper(Context ct) {
+        this.ct = ct;
+        dbHelper = new DBHelper(ct);
+        try {
+            dbHelper.createDataBase();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
 
     public static String getAppName(String dirName) {
-        appMap.put("360", "360安全卫士");
-        appMap.put("360OS", "360OS社区");
-        appMap.put("360contacts_v2", "360安全通讯录");
-        appMap.put("91Contacts", "91通讯库");
-        appMap.put("BaiduMap", "百度地图");
-        appMap.put("cn.coupon.kfc", "肯德基");
-        appMap.put("com.mylafe.ttmh", "");
-        appMap.put("com.taobao.movie.android", "淘宝电影");
-        return (TextUtils.isEmpty(appMap.get(dirName)) ? "" : "|" + appMap.get(dirName));
+        db = dbHelper.getWritableDatabase();
+        Cursor cursor = db.query("dir_name", null, "path=?",
+                    new String[]{dirName}, null, null, null);
+
+        appName = cursor.moveToFirst() ? "|" + cursor.getString(cursor.getColumnIndex("name")) : "";
+        db.close();
+        return appName;
     }  
 
 
