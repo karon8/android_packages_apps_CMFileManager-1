@@ -28,6 +28,7 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:colorPrimary">@color/material_palette_blue_primary</item>
         <item name="android:colorPrimaryDark">@color/material_palette_blue_primary_dark</item>
+        <item name="android:navigationBarColor">@color/material_palette_blue_primary_dark</item>
         <item name="android:colorControlHighlight">@color/material_palette_blue_accent_dark</item>
         <item name="android:colorAccent">@color/material_palette_blue_primary_dark</item>
         <item name="android:actionMenuTextColor">@android:color/white</item>

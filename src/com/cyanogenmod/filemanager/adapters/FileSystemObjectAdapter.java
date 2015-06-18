@@ -37,6 +37,7 @@ import com.cyanogenmod.filemanager.preferences.Preferences;
 import com.cyanogenmod.filemanager.ui.IconHolder;
 import com.cyanogenmod.filemanager.ui.ThemeManager;
 import com.cyanogenmod.filemanager.ui.ThemeManager.Theme;
+import com.cyanogenmod.filemanager.util.AppDirNameHelper;
 import com.cyanogenmod.filemanager.util.FileHelper;
 import com.cyanogenmod.filemanager.util.MimeTypeHelper;
 
@@ -243,7 +244,7 @@ public class FileSystemObjectAdapter
             }
             this.mData[i].mDwIcon = this.mIconHolder.getDrawable(
                     MimeTypeHelper.getIcon(getContext(), fso));
-            this.mData[i].mName = fso.getName();
+            this.mData[i].mName = fso.getName() + AppDirNameHelper.getAppName(fso.getName());
             this.mData[i].mSummary = sbSummary.toString();
             this.mData[i].mSize = FileHelper.getHumanReadableSize(fso);
         }
