@@ -310,8 +310,8 @@ public class FileSystemObjectAdapter
         new Handler().post(new Runnable() {
             @Override
             public void run() {
-                String appNamr = AppDirNameHelper.getAppName(dataHolder.mDirPath);
-                viewHolder.mTvName.setText(dataHolder.mName+appNamr);
+                String appName = AppDirNameHelper.getAppName(dataHolder.mDirPath);
+                viewHolder.mTvName.setText(dataHolder.mName+appName);
             }
         });
 
