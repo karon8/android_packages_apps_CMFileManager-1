@@ -28,6 +28,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.os.Handler;
+import android.os.Environment;
 
 import com.cyanogenmod.filemanager.R;
 import com.cyanogenmod.filemanager.model.FileSystemObject;
@@ -95,6 +97,7 @@ public class FileSystemObjectAdapter
         Drawable mDwCheck;
         Drawable mDwIcon;
         String mName;
+        String mDirPath;
         String mSummary;
         String mSize;
     }
@@ -119,6 +122,9 @@ public class FileSystemObjectAdapter
     private static final int RESOURCE_ITEM_SUMMARY = R.id.navigation_view_item_summary;
     //The resource of the item size information
     private static final int RESOURCE_ITEM_SIZE = R.id.navigation_view_item_size;
+
+    private String sdPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+
 
     /**
      * Constructor of <code>FileSystemObjectAdapter</code>.
@@ -245,8 +251,8 @@ public class FileSystemObjectAdapter
             }
             this.mData[i].mDwIcon = this.mIconHolder.getDrawable(
                     MimeTypeHelper.getIcon(getContext(), fso));
-            this.mData[i].mName = fso.getName() + AppDirNameHelper.getAppName(
-                               fso.getFullPath().replace("storage/emulated/0/",""));
+            this.mData[i].mName = fso.getName();
+            this.mData[i].mDirPath = fso.getFullPath().replace(sdPath,"");
             this.mData[i].mSummary = sbSummary.toString();
             this.mData[i].mSize = FileHelper.getHumanReadableSize(fso);
         }
@@ -288,7 +294,7 @@ public class FileSystemObjectAdapter
         final DataHolder dataHolder = this.mData[position];
 
         //Retrieve the view holder
-        ViewHolder viewHolder = (ViewHolder)v.getTag();
+        final ViewHolder viewHolder = (ViewHolder)v.getTag();
         if (this.mPickable) {
             theme.setBackgroundDrawable(getContext(), v, "background_drawable"); //$NON-NLS-1$
         }
@@ -301,6 +307,14 @@ public class FileSystemObjectAdapter
         mIconHolder.loadDrawable(viewHolder.mIvIcon, getItem(position), dataHolder.mDwIcon);
 
         viewHolder.mTvName.setText(dataHolder.mName);
+        new Handler().post(new Runnable() {
+            @Override
+            public void run() {
+                String appNamr = AppDirNameHelper.getAppName(dataHolder.mDirPath);
+                viewHolder.mTvName.setText(dataHolder.mName+appNamr);
+            }
+        });
+
         theme.setTextColor(getContext(), viewHolder.mTvName, "text_color"); //$NON-NLS-1$
         if (viewHolder.mTvSummary != null) {
             viewHolder.mTvSummary.setText(dataHolder.mSummary);
