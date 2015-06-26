@@ -17,120 +17,89 @@
 package com.cyanogenmod.filemanager.util;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.util.ArrayList;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteDatabase.CursorFactory;
-import android.database.sqlite.SQLiteException;
-import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Environment;
 
-public class DBHelper extends SQLiteOpenHelper {
+public class DBManager {
+	
+    private final int BUFFER_SIZE = 400000;
+    public static final String DB_NAME = "app_dir_name.db";
+    public static final String PACKAGE_NAME = "com.cyanogenmod.filemanager";
+    public static final String DB_PATH = "/data"
+            + Environment.getDataDirectory().getAbsolutePath() + "/"
+            + PACKAGE_NAME;
+    public static ArrayList<String> mDbList;
+    
+    
+    private SQLiteDatabase database;
+    private Context mContext;
 
-    private static final int DB_VERSION = 1;
-    private static String DB_PATH = "/data/data/com.cyanogenmod.filemanager/databases/";
-
-    private static String SETTINS = "dir_settings";
-    private SharedPreferences preferences;
-    private Editor editor;
-
-    private static String DB_NAME = "app_dir_name.db";
-    private static String ASSETS_NAME = "app_dir_name.db";
-
-    private SQLiteDatabase myDataBase = null;
-    private final Context myContext;
-
-    public DBHelper(Context context, String name, CursorFactory factory,
-            int version) {
-        super(context, name, null, version);
-        this.myContext = context;
+    public DBManager(Context context) {
+    	mContext = context;
     }
 
-    public DBHelper(Context context, String name, int version) {
-        this(context, name, null, version);
+    public void openDatabase() {
+        database = this.openDatabase(DB_PATH + "/" + DB_NAME);
     }
 
-    public DBHelper(Context context, String name) {
-        this(context, name, DB_VERSION);
-    }
+    private SQLiteDatabase openDatabase(String dbfile) {
 
-    public DBHelper(Context context) {
-        this(context, DB_PATH + DB_NAME);
-        preferences = context.getSharedPreferences(SETTINS, context.MODE_PRIVATE);
-        editor = preferences.edit();
-    }
-
-    public void createDataBase() throws IOException {
-        boolean dbExist = checkDataBase();
-        if (dbExist) {
-        } else {
-            try {
-                File dir = new File(DB_PATH);
-                if (!dir.exists()) {
-                    dir.mkdirs();
+        try {
+            if (!(new File(dbfile).exists())) {
+                InputStream is = mContext.getResources().openRawResource(
+                        R.raw.app_dir_name);
+                FileOutputStream fos = new FileOutputStream(dbfile);
+                byte[] buffer = new byte[BUFFER_SIZE];
+                int count = 0;
+                while ((count = is.read(buffer)) > 0) {
+                    fos.write(buffer, 0, count);
                 }
-                File dbf = new File(DB_PATH + DB_NAME);
-                if (dbf.exists()) {
-                    dbf.delete();
+                fos.close();
+                is.close();
+            }
+
+            SQLiteDatabase db = SQLiteDatabase.openOrCreateDatabase(dbfile,null);
+            setDbToAllList(db);
+            return db;
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
+    private void setDbToAllList(SQLiteDatabase db) {
+    	mDbList = new ArrayList<String>();
+    	Cursor mCursor = db.rawQuery("SELECT * FROM dir_name", null);
+    	if (mCursor != null) {
+            int count = mCursor.getCount();
+            if (count > 0) {
+                mCursor.moveToFirst();
+                for(int i=0; i<count; i++) {
+                    String list = mCursor.getString(mCursor.getColumnIndex("path"))
+                            + " " + mCursor.getString(mCursor.getColumnIndex("name"));
+                    mDbList.add(list);
+                    mCursor.moveToNext();
                 }
-                SQLiteDatabase.openOrCreateDatabase(dbf, null);
-                copyDataBase();
-                editor.putInt("version", DB_VERSION);
-                editor.commit();
-            } catch (IOException e) {
-                throw new Error("");
+            }
+            if (mCursor != null) {
+                mCursor.close();
+                mCursor = null;
             }
         }
     }
 
-    private boolean checkDataBase() {
-        SQLiteDatabase checkDB = null;
-        String myPath = DB_PATH + DB_NAME;
-        boolean isOldVersion = (preferences.getInt("version", 0) < DB_VERSION);
-        try {
-            checkDB = SQLiteDatabase.openDatabase(myPath, null,
-                SQLiteDatabase.OPEN_READONLY);
-        } catch (SQLiteException e) {
-        }
-        if (checkDB != null) {
-            checkDB.close();
-        }
-        return (checkDB != null && !isOldVersion) ? true : false;
-    }
-
-    public void copyDataBase() throws IOException {
-
-        InputStream myInput = myContext.getAssets().open(ASSETS_NAME);
-        String outFileName = DB_PATH + DB_NAME;
-        OutputStream myOutput = new FileOutputStream(outFileName);
-        byte[] buffer = new byte[1024];
-        int length;
-        while ((length = myInput.read(buffer)) > 0) {
-            myOutput.write(buffer, 0, length);
-        }
-        myOutput.flush();
-        myOutput.close();
-        myInput.close();
-    }
-
-    @Override
-    public synchronized void close() {
-        if (myDataBase != null) {
-            myDataBase.close();
-        }
-        super.close();
-    }
-
-    @Override
-    public void onCreate(SQLiteDatabase db) {
-    }
-
-    @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    public void closeDatabase() {
+        database.close();
     }
 }
